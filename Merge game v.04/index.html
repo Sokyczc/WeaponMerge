@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magické předměty - Kombinační hra</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>WeaponMarge</h1>
+            <div id="resources">
+             
+                <span id="play-time">
+                    <span>⏱️ Odehraný čas: <span id="time-count">00:00:00</span></span>
+                </span>
+                <button id="leaderboard-button" title="Otevřít žebříček">🏆 Žebříček</button>
+            </div>
+        </header>
+        <div id="game-content">
+            <main>
+                <section id="inventory">
+                    <div class="inventory-header">
+                        <h2>Inventář</h2>
+                        <div class="inventory-actions">
+                            <button id="auto-combine" title="Automaticky spojit vše">Auto spojit (50 AM)</button>
+                            <button id="sell-all" title="Prodat všechny předměty">Prodat vše</button>
+                            <button id="upgrade-all" title="Vylepšit zbraň všemi předměty">Vylepšit vše (10 AM)</button>
+                            <button id="buy-item" title="Koupit předmět">Koupit (2 AM)</button>
+                            <button id="generate-item" title="Vygenerovat předmět">
+                                <span class="button-text">Generovat</span>
+                                <span class="cooldown"></span>
+                            </button>
+                            <!-- Přidejte do sekce inventáře -->
+                        </div>
+                    </div>
+                    <div id="item-grid"></div>
+                </section>
+            </main>
+            <aside>
+                <section id="equipment-and-sell">
+                    <div id="equipment">
+                        <h2>Vybavení</h2>
+                        <div id="weapon-slot" class="equipment-slot">
+                            <p>Zbraň</p>
+                        </div>
+                        <p>Útočná síla: <span id="attack-value">0</span></p>
+                        <div id="rebirth-info">
+                            <span class="rebirth-icon">🔄</span> <!-- Přidána ikona -->
+                            <span>Počet rebirthů: <span id="rebirth-count">0</span></span>
+                        </div>
+                    </div>
+                    <div id="sell-area">
+                        <h2>Prodat zbraň</h2>
+                        <div id="sell-drop-zone">
+                            Přetáhněte sem zbraň pro prodej
+                        </div>
+                    </div>
+                </section>
+                <section id="upgrade">
+                    <h2>Vylepšení</h2>
+                    <div id="upgrade-slot" class="equipment-slot">
+                        <p>Vylepšení</p>
+                    </div>
+                    <div id="upgrade-progress">
+                        <div id="upgrade-bar"></div>
+                    </div>
+                </section>
+                <section id="shop">
+                    <h2>Obchod</h2>
+                    <!-- Odstraňte nebo zakomentujte následující řádky -->
+                    <!-- <button id="buy-item">Koupit předmět (2 antimatter)</button> -->
+                    <!-- <button id="generate-item">Vygenerovat předmět (10s)</button> -->
+                </section>
+                <section id="world-boss">
+                    <h2>Bossové</h2>
+                    <div class="boss-buttons">
+                        <button id="fight-normal-boss">Normální Boss</button>
+                        <button id="fight-elite-boss">Elitní Boss</button>
+                        <!-- Přidejte další tlačítka pro jiné bosse -->
+                    </div>
+                </section>
+            </aside>
+        </div>
+        <footer>
+            <section id="rarity-legend">
+                <h2>Legenda vzácností</h2>
+                <div class="rarity-legend"></div>
+            </section>
+        </footer>
+    </div>
+    <script src="config.js"></script>
+    <script src="items.js"></script>
+    <script src="inventory.js"></script>
+    <script src="shop.js"></script>
+    <script src="worldBoss.js"></script>
+    <script src="achievements.js"></script>
+    <script src="playtime.js"></script>
+    <script src="leaderboard.js"></script>
+    <script src="main.js"></script>
+    <script src="ui.js"></script>
+    <script src="stats.js"></script>
+    <!-- Přidat těsně před uzavírací tag </body> -->
+    <div id="dev-button" style="position: fixed; bottom: 10px; right: 10px; z-index: 9999; opacity: 0.3;">
+        <button onclick="addAntimatter()" style="background: #333; color: #666; border: none; padding: 5px; cursor: pointer; font-size: 10px;">DEV</button>
+    </div>
+    <div id="antimatter-container">
+        <svg id="antimatter-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="antimatterGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" style="stop-color:#b19cd9"/>
+                    <stop offset="100%" style="stop-color:#8a2be2"/>
+                </radialGradient>
+            </defs>
+            <circle cx="50" cy="50" r="45" fill="url(#antimatterGrad)"/>
+            <circle cx="50" cy="50" r="35" fill="none" stroke="#fff" stroke-width="2">
+                <animate attributeName="r" values="35;40;35" dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.7;0.3;0.7" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="50" cy="50" r="25" fill="none" stroke="#fff" stroke-width="2">
+                <animate attributeName="r" values="25;30;25" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+                <animate attributeName="opacity" values="0.7;0.3;0.7" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+            </circle>
+        </svg>
+        <span id="antimatter-count">0</span>
+    </div>
+    <div id="rebirth-info">
+        <p>Počet rebirthů: <span id="rebirth-count">0</span></p>
+        <p>Bonus k síle zbraní: <span id="weapon-bonus">0%</span></p>
+    </div>
+</body>
+</html>

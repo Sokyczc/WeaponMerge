@@ -1,0 +1,1237 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #F0F0F0; /* Pozadí */
+    color: #333333; /* Text */
+}
+
+#game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #4A90E2; /* Primární barva */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+
+#game-content {
+    display: flex;
+    gap: 20px;
+}
+
+main {
+    flex: 3;
+}
+
+aside {
+    flex: 1;
+}
+
+#inventory, #equipment, #shop, #sell-area, #world-boss {
+    background-color: white;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#item-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    background-color: #F8F9FA;
+    border-radius: 10px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+}
+
+.item {
+    width: 120px;
+    height: 120px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    cursor: move;
+    user-select: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: visible;
+}
+
+/* Upravený hover efekt s menším hit boxem */
+.item::after {
+    content: '';
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.item:hover {
+    transform: scale(1.1) rotate(3deg);
+    z-index: 10;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Upravený hover efekt pro světelný efekt */
+.item::before {
+    content: '';
+    position: absolute;
+    top: -25%;
+    left: -25%;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none; /* Důležité pro zabránění interference s hit boxem */
+}
+
+.item:hover::before {
+    opacity: 1;
+}
+
+/* Zajistíme, že text a další elementy uvnitř itemu nebudou interferovat s hit boxem */
+.item-name, .item-rarity, .item-power {
+    pointer-events: none;
+}
+
+.item svg {
+    pointer-events: none;
+}
+
+.item.dragging {
+    opacity: 0.8;
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.item-name, .item-rarity, .item-power {
+    font-size: 12px;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    color: #333333; /* Text */
+    z-index: 2;
+    position: relative;
+}
+
+.item-rarity {
+    font-weight: bold;
+}
+
+.item svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.equipment-slot {
+    width: 100px;
+    height: 100px;
+    border: 2px dashed #ccc;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.drag-over {
+    border: 2px dashed #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+#sell-drop-zone {
+    width: 100%;
+    height: 100px;
+    border: 2px dashed #ccc;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background-color: #f8f9fa;
+    color: #888;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+#sell-drop-zone.drag-over {
+    border-color: #4CAF50;
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+}
+
+@keyframes float {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-5px) rotate(2deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes rainbow {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+.item[data-rarity="Rare"],
+.item[data-rarity="Epic"] {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.item[data-rarity="Legendary"],
+.item[data-rarity="Mythic"],
+.item[data-rarity="Divine"] {
+    animation: float 3s ease-in-out infinite, pulse 2s ease-in-out infinite;
+}
+
+.item[data-rarity="Celestial"],
+.item[data-rarity="Cosmic"],
+.item[data-rarity="Transcendent"] {
+    animation: float 3s ease-in-out infinite, pulse 2s ease-in-out infinite, rainbow 5s linear infinite;
+}
+
+.item[data-rarity="Ethereal"],
+.item[data-rarity="Astral"],
+.item[data-rarity="Quantum"],
+.item[data-rarity="Dimensional"],
+.item[data-rarity="Omnipotent"] {
+    animation: float 3s ease-in-out infinite, pulse 2s ease-in-out infinite, rainbow 5s linear infinite, rotate 20s linear infinite;
+}
+
+.item[data-rarity="Omnipotent"]::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+    opacity: 0.5;
+    z-index: -1;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.rarity-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.rarity-legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+}
+
+.rarity-legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+footer {
+    margin-top: 20px;
+}
+
+#rarity-legend {
+    background-color: white;
+    border-radius: 5px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    #game-content {
+        flex-direction: column;
+    }
+
+    main, aside {
+        flex: 1;
+    }
+
+    #equipment-and-sell {
+        flex-direction: column;
+    }
+}
+
+/* Zachováme všechny původní animace a efekty */
+
+#upgrade-progress {
+    width: 100%;
+    height: 20px;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+#upgrade-bar {
+    width: 0%;
+    height: 100%;
+    background-color: #4CAF50;
+    transition: width 0.3s ease;
+}
+
+.inventory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.inventory-header h2 {
+    margin: 0;
+    margin-right: 10px;
+}
+
+.inventory-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.inventory-actions button {
+    font-size: 0.9em;
+    padding: 5px 10px;
+    white-space: nowrap;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+#generate-item {
+    background-color: #FFC107;
+    color: #000;
+}
+
+#generate-item .cooldown {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    transition: width 0.1s linear;
+}
+
+#generate-item .button-text {
+    position: relative;
+    z-index: 1;
+}
+
+#generate-item:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .inventory-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .inventory-actions {
+        margin-top: 10px;
+    }
+
+    /* ... (ostatní responsive styly zůstávají stejn) ... */
+}
+
+#achievements {
+    background-color: white;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.achievements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.achievement {
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    padding: 10px;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.achievement.completed {
+    background-color: #e8f5e9;
+    opacity: 1;
+    border-left: 4px solid #4CAF50;
+}
+
+.achievement h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.achievement p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.achievement .reward {
+    font-size: 12px;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.achievement-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    animation: slideIn 0.5s ease-out;
+    z-index: 1000;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+#resources {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+#play-time {
+    color: #fff;
+    font-size: 1em;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+}
+
+#play-time span {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+#time-count {
+    font-family: monospace;
+    font-weight: bold;
+}
+
+#leaderboard-button {
+    background-color: #ffd700;
+    color: #333;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 1em;
+    transition: all 0.2s;
+}
+
+#leaderboard-button:hover {
+    background-color: #ffed4a;
+    transform: scale(1.05);
+}
+
+.boss-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.boss-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+}
+
+#fight-normal-boss { background-color: #4CAF50; color: white; }
+#fight-elite-boss { background-color: #2196F3; color: white; }
+#fight-champion-boss { background-color: #9C27B0; color: white; }
+#fight-world-boss { background-color: #FF9800; color: white; }
+#fight-ancient-boss { background-color: #F44336; color: white; }
+
+.boss-buttons button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#stats-counter {
+    font-weight: bold;
+    color: #4CAF50;
+    margin: 0 5px;
+}
+
+#resources span {
+    margin-right: 15px;
+}
+
+.name-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.dialog-content {
+    background: #2a2a2a;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    color: white;
+}
+
+.dialog-content input {
+    padding: 10px;
+    margin: 10px 0;
+    width: 200px;
+    border: none;
+    border-radius: 5px;
+    background: #3a3a3a;
+    color: white;
+}
+
+.dialog-content input.error {
+    border: 2px solid #f44336;
+}
+
+.dialog-content button {
+    padding: 10px 20px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.dialog-content button:hover {
+    background: #45a049;
+}
+
+/* Přidání novho stylu pro Universal raritu */
+.item[data-rarity="Universal"] {
+    animation: float 3s ease-in-out infinite, 
+              pulse 2s ease-in-out infinite, 
+              rainbow 5s linear infinite, 
+              rotate 20s linear infinite,
+              dimensionalShift 8s linear infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+.item[data-rarity="Universal"] .rising-particles {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Přidání nové animace pro dimensionalShift efekt */
+@keyframes dimensionalShift {
+    0% { transform: perspective(500px) rotateY(0deg) scale(1); }
+    25% { transform: perspective(500px) rotateY(180deg) scale(1.1); }
+    50% { transform: perspective(500px) rotateY(360deg) scale(1); }
+    75% { transform: perspective(500px) rotateY(540deg) scale(0.9); }
+    100% { transform: perspective(500px) rotateY(720deg) scale(1); }
+}
+
+/* Přidání stylů pro nová tlačítka */
+#sell-all {
+    background-color: #f44336;
+}
+
+#sell-all:hover {
+    background-color: #d32f2f;
+}
+
+#upgrade-all {
+    background-color: #9c27b0;
+}
+
+#upgrade-all:hover {
+    background-color: #7b1fa2;
+}
+
+#upgrade-all:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.inventory-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.inventory-actions button {
+    flex: 1;
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+/* Upravené styly pro Ethereal Flame raritu */
+.item[data-rarity="Ethereal Flame"] {
+    position: relative;
+    background: #000000;
+    border: 3px solid #00ff00;
+    box-shadow: 
+        0 0 10px #00ff00,
+        0 0 20px #00ff00,
+        inset 0 0 15px #00ff00;
+    overflow: hidden;
+    animation: 
+        float 3s ease-in-out infinite,
+        pulse 2s ease-in-out infinite;
+}
+
+/* Hlavní efekt plamenů */
+.item[data-rarity="Ethereal Flame"]::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            rgba(0, 255, 0, 0.1) 20px,
+            transparent 40px
+        );
+    animation: rotateFlames 10s linear infinite;
+    z-index: 1;
+}
+
+/* Sekundární efekt plamenů */
+.item[data-rarity="Ethereal Flame"]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        circle at 50% 50%,
+        rgba(0, 255, 0, 0.3) 0%,
+        transparent 70%
+    );
+    animation: pulseGlow 2s ease-in-out infinite;
+    z-index: 2;
+}
+
+/* Nové animace */
+@keyframes rotateFlames {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.1);
+    }
+}
+
+/* Přidání stínování pro lepší 3D efekt */
+.item[data-rarity="Ethereal Flame"] {
+    box-shadow:
+        0 0 10px #00ff00,
+        0 0 20px #00ff00,
+        0 0 30px #00ff00,
+        inset 0 0 15px #00ff00;
+}
+
+/* Nový styl pro Antimatter counter */
+#antimatter-container {
+    position: fixed; /* Fixní pozice pro plovoucí efekt */
+    top: 10px; /* Umístění v levém horním rohu */
+    left: 10px;
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(45deg, #4A90E2, #50E3C2); /* Primární a sekundární barva */
+    padding: 8px 15px;
+    border-radius: 15px;
+    border: 2px solid #F5A623; /* Akcentn barva */
+    box-shadow: 
+        0 0 10px rgba(138, 43, 226, 0.4),
+        inset 0 0 5px rgba(138, 43, 226, 0.2);
+    margin: 10px;
+    transition: all 0.3s ease;
+    z-index: 1000; /* Zajistí, že bude nad ostatními prvky */
+}
+
+#antimatter-container:hover {
+    transform: scale(1.05);
+    box-shadow: 
+        0 0 15px rgba(138, 43, 226, 0.6),
+        inset 0 0 8px rgba(138, 43, 226, 0.3);
+}
+
+#antimatter-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    animation: rotateAntimatter 4s linear infinite;
+}
+
+#antimatter-count {
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(138, 43, 226, 0.8);
+    font-family: 'Arial', sans-serif;
+}
+
+/* Animace pro ikonu */
+@keyframes rotateAntimatter {
+    0% {
+        transform: rotate(0deg) scale(1);
+        filter: hue-rotate(0deg);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.1);
+        filter: hue-rotate(180deg);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+        filter: hue-rotate(360deg);
+    }
+}
+
+#upgrade-all:hover {
+    background-color: #7b1fa2;
+}
+
+#upgrade-all:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.inventory-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.inventory-actions button {
+    flex: 1;
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+/* Upravené styly pro Ethereal Flame raritu */
+.item[data-rarity="Ethereal Flame"] {
+    position: relative;
+    background: #000000;
+    border: 3px solid #00ff00;
+    box-shadow: 
+        0 0 10px #00ff00,
+        0 0 20px #00ff00,
+        inset 0 0 15px #00ff00;
+    overflow: hidden;
+    animation: 
+        float 3s ease-in-out infinite,
+        pulse 2s ease-in-out infinite;
+}
+
+/* Hlavní efekt plamenů */
+.item[data-rarity="Ethereal Flame"]::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            rgba(0, 255, 0, 0.1) 20px,
+            transparent 40px
+        );
+    animation: rotateFlames 10s linear infinite;
+    z-index: 1;
+}
+
+/* Sekundární efekt plamenů */
+.item[data-rarity="Ethereal Flame"]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        circle at 50% 50%,
+        rgba(0, 255, 0, 0.3) 0%,
+        transparent 70%
+    );
+    animation: pulseGlow 2s ease-in-out infinite;
+    z-index: 2;
+}
+
+/* Nové animace */
+@keyframes rotateFlames {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.1);
+    }
+}
+
+/* Přidání stínování pro lepší 3D efekt */
+.item[data-rarity="Ethereal Flame"] {
+    box-shadow:
+        0 0 10px #00ff00,
+        0 0 20px #00ff00,
+        0 0 30px #00ff00,
+        inset 0 0 15px #00ff00;
+}
+
+/* Nový styl pro Antimatter counter */
+#antimatter-container {
+    position: fixed; /* Fixní pozice pro plovoucí efekt */
+    top: 10px; /* Umístění v levém horním rohu */
+    left: 10px;
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(45deg, #4A90E2, #50E3C2); /* Primární a sekundární barva */
+    padding: 8px 15px;
+    border-radius: 15px;
+    border: 2px solid #F5A623; /* Akcentn barva */
+    box-shadow: 
+        0 0 10px rgba(138, 43, 226, 0.4),
+        inset 0 0 5px rgba(138, 43, 226, 0.2);
+    margin: 10px;
+    transition: all 0.3s ease;
+    z-index: 1000; /* Zajistí, že bude nad ostatními prvky */
+}
+
+#antimatter-container:hover {
+    transform: scale(1.05);
+    box-shadow: 
+        0 0 15px rgba(138, 43, 226, 0.6),
+        inset 0 0 8px rgba(138, 43, 226, 0.3);
+}
+
+#antimatter-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    animation: rotateAntimatter 4s linear infinite;
+}
+
+#antimatter-count {
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(138, 43, 226, 0.8);
+    font-family: 'Arial', sans-serif;
+}
+
+/* Animace pro ikonu */
+@keyframes rotateAntimatter {
+    0% {
+        transform: rotate(0deg) scale(1);
+        filter: hue-rotate(0deg);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.1);
+        filter: hue-rotate(180deg);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+        filter: hue-rotate(360deg);
+    }
+}
+
+/* Efekt při přidání antimatter */
+.antimatter-increase {
+    animation: increaseEffect 0.5s ease-out;
+}
+
+@keyframes increaseEffect {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Particle efekt při změně hodnoty */
+.antimatter-particle {
+    position: absolute;
+    pointer-events: none;
+    animation: particleFly 1s ease-out forwards;
+}
+
+@keyframes particleFly {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--x), var(--y)) scale(0);
+        opacity: 0;
+    }
+}
+
+.item-added {
+    animation: itemAdded 0.5s ease-out;
+}
+
+.item-removed {
+    animation: itemRemoved 0.5s ease-out;
+}
+
+@keyframes itemAdded {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes itemRemoved {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+}
+
+header h1 {
+    background: none; /* Odstranění pozadí */
+    color: #FFD700; /* Žlutá barva textu */
+    font-size: 3em; /* Velikost písma */
+    text-align: center; /* Zarovnání na střed */
+    text-shadow: none; /* Odstranění svítícího efektu */
+}
+
+@keyframes shine {
+    0% {
+        text-shadow: 0 0 5px #FFD700, 0 0 10px #FFD700, 0 0 15px #FFD700, 0 0 20px #FFD700;
+    }
+    50% {
+        text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFD700, 0 0 40px #FFD700;
+    }
+    100% {
+        text-shadow: 0 0 5px #FFD700, 0 0 10px #FFD700, 0 0 15px #FFD700, 0 0 20px #FFD700;
+    }
+}
+
+.weapon-effect-common {
+    animation: commonEffect 1s infinite;
+}
+
+.weapon-effect-rare {
+    animation: rareEffect 1s infinite;
+}
+
+.weapon-effect-legendary {
+    animation: legendaryEffect 1s infinite;
+}
+
+@keyframes commonEffect {
+    0% { box-shadow: 0 0 5px #a5a5a5; }
+    50% { box-shadow: 0 0 10px #a5a5a5; }
+    100% { box-shadow: 0 0 5px #a5a5a5; }
+}
+
+@keyframes rareEffect {
+    0% { box-shadow: 0 0 10px #5555ff; }
+    50% { box-shadow: 0 0 20px #5555ff; }
+    100% { box-shadow: 0 0 10px #5555ff; }
+}
+
+@keyframes legendaryEffect {
+    0% { box-shadow: 0 0 15px #ffaa00; }
+    50% { box-shadow: 0 0 30px #ffaa00; }
+    100% { box-shadow: 0 0 15px #ffaa00; }
+}
+
+.boss-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.popup-content {
+    text-align: center;
+}
+
+.boss-image {
+    width: 150px;
+    height: 150px;
+    margin: 20px auto;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 0, 0, 0.5);
+    animation: glow 1s infinite alternate;
+    position: relative;
+    overflow: hidden;
+}
+
+.boss-image.elite {
+    animation: eliteGlow 1.5s infinite alternate;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 105, 180, 0.7);
+}
+
+@keyframes eliteGlow {
+    from {
+        box-shadow: 0 0 20px rgba(255, 105, 180, 0.5), 0 0 30px rgba(255, 105, 180, 0.7);
+    }
+    to {
+        box-shadow: 0 0 30px rgba(255, 105, 180, 0.7), 0 0 40px rgba(255, 105, 180, 0.9);
+    }
+}
+
+.boss-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.boss-image.shake {
+    animation: shake 0.3s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translate(0, 0); }
+    20%, 60% { transform: translate(-5px, 0); }
+    40%, 80% { transform: translate(5px, 0); }
+}
+
+#close-popup {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#close-popup:hover {
+    background-color: #d32f2f;
+}
+
+.particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: particleAnimation 1s forwards;
+}
+
+@keyframes particleAnimation {
+    0% {
+        transform: translate(0, 0);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--x), var(--y));
+        opacity: 0;
+    }
+}
+
+.health-bar {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    background-color: #ddd;
+    border-radius: 10px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.health-bar-inner {
+    height: 100%;
+    background-color: #4caf50;
+    transition: width 0.3s ease;
+}
+
+#health-text {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    top: 0;
+    left: 0;
+    line-height: 20px;
+    color: white;
+    font-weight: bold;
+}
+
+#rebirth-button {
+    background-color: #ff5722;
+    margin-top: 10px; /* Přidání mezery nad tlačítkem */
+}
+
+#rebirth-button:hover {
+    background-color: #e64a19;
+}
+
+#rebirth-info {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+#rebirth-info p {
+    margin: 5px 0;
+}
+
+#rebirth-info {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #333;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.rebirth-icon {
+    font-size: 24px;
+    margin-right: 10px;
+    color: #ff5722;
+}
